@@ -1,0 +1,19 @@
+name: diag-umcdn
+on: [push, workflow_dispatch]
+jobs:
+  test:
+    runs-on: macos-15
+    steps:
+      - name: Probe umcdn endpoints
+        run: |
+            URLs=(
+              "https://umcdn.quark.cn/download/37213/quarkclouddrivemac/pckk@product_guanwang/QuarkCloudDriveMac_V7.2.0.792_mac_pf30003_(zh-cn)_abiarm64_(Build3172746).dmg"
+              "https://umcdn.quark.cn/download/37213/quarkclouddrivemac/pckk@app_downloader_fail_arm64/QuarkCloudDriveMac_V7.0.6.771_mac_pf30003_(zh-cn)_abiarm64_(Build3120899).dmg"
+              "https://umcdn.quark.cn/download/37213/quarkclouddrivemac/pckk@product_guanwang_macmini/macmini_V7.1.7.791_mac_pf30003_(zh-cn)_abiarm64_(Build3004627).dmg"
+            )
+            for u in "${URLS[@]}"; do
+              echo "=== $u"
+              curl -4 -sSI -m 30 -o /dev/null -w "ipv4: %{http_code} %{remote_ip} (%{time_total}s)\n" "$u" || echo "ipv4: FAIL exit=$?"
+              curl -6 -sSI -m 30 -o /dev/null -w "ipv6: %{http_code} %{remote_ip} (%{time_total}s)\n" "$u" || echo "ipv6: FAIL exit=$?"
+            done
+            dig +short umcdn.quark.cn | head -8
